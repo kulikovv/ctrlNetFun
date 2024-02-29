@@ -1,1 +1,1 @@
-# ctrlNetFun
+# Funny stuff with controlnet costumization
