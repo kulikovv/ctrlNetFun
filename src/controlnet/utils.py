@@ -2,17 +2,17 @@ import numpy as np
 import torch
 import PIL
 from torchvision.transforms import ToTensor
-from typing import Union
+from typing import Union, List
 
 
-def prepare_mask(mask: Union[PIL.Image.Image, np.ndarray, torch.Tensor],
+def prepare_mask(mask: Union[PIL.Image.Image, np.ndarray, torch.Tensor, List[PIL.Image.Image]],
                  image: torch.Tensor) -> torch.Tensor:
     """
     Prepares a mask tensor given a mask in the form of PIL Image,
     NumPy array, or PyTorch tensor, and an input image tensor.
 
     Args:
-    - mask: Input mask in the form of PIL Image, NumPy array, or PyTorch tensor.
+    - mask: Input mask in the form of PIL Image, List of PIL Images,  NumPy array, or PyTorch tensor.
     - image: Input image tensor.
 
     Returns:
@@ -21,15 +21,18 @@ def prepare_mask(mask: Union[PIL.Image.Image, np.ndarray, torch.Tensor],
     Raises:
     - NotImplementedError: If the mask shape or datatype is not supported.
     """
+    transform = ToTensor()
     if isinstance(mask, PIL.Image.Image):
         # convert PIL to torch
-        mask = ToTensor()(mask)
+        mask = transform(mask)
         if 3 == len(mask.shape):  # three channels
             mask = mask.unsqueeze(0)
         elif 2 == len(mask.shape):  # single channel
             mask = mask.unsqueeze(0).unsqueeze(0)
         else:
             raise NotImplementedError(f"mask shape {mask.shape} is not support!")
+    elif isinstance(mask, list):
+        mask = torch.cat([transform(c).unsqueeze(0) for c in mask])
     elif isinstance(mask, np.ndarray):
         mask = torch.from_numpy(mask)
         # we expect mask as input from opencv WxHxC so we will permute
@@ -82,6 +85,8 @@ def apply_mask(
         using bicubic interpolation and then applies element-wise multiplication with the
         input tensor to produce the masked tensor.
     """
+    assert 4 == len(tensor.shape), "Tensor must be 4D tensor"
+    assert 4 == len(mask.shape), "Mask must be 4D tensor"
 
     height, width = tensor.shape[-2:]
     tensor_mask = torch.nn.functional.interpolate(mask, size=(height, width), mode='bicubic')

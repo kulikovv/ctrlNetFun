@@ -10,7 +10,6 @@ from diffusers.pipelines.text_to_video_synthesis.pipeline_text_to_video_zero imp
 from .controlnet import MaskedStableDiffusionControlNetPipeline, MaskedControlNetModel
 import torch
 from transparent_background import Remover
-from torchvision.transforms import ToTensor
 
 
 def build_foreground_masks(input_image: Union[PIL.Image.Image, List[PIL.Image.Image]]) \
@@ -91,7 +90,35 @@ def image_inference(input_image: Union[PIL.Image.Image, List[PIL.Image.Image]],
                     input_masks: Union[PIL.Image.Image, List[PIL.Image.Image]],
                     input_prompt: Union[str, List[str]]) \
         -> Union[PIL.Image.Image, List[PIL.Image.Image]]:
+    """
+    Perform T2I inference using a given input image or list of images, masks, and prompts.
 
+    Args:
+        input_image (Union[PIL.Image.Image, List[PIL.Image.Image]]):
+            Input image or list of input images for inference.
+        input_masks (Union[PIL.Image.Image, List[PIL.Image.Image]]):
+            Foreground mask or list of foreground masks corresponding to the input images.
+        input_prompt (Union[str, List[str]]):
+            Input prompt or list of input prompts for the inference process.
+
+    Returns:
+        Union[PIL.Image.Image, List[PIL.Image.Image]]:
+            Output image or list of output images generated through inference.
+
+    Raises:
+        AssertionError: If types of input images and masks don't match or if 
+        prompts and images don't have the same number.
+
+    Note:
+        - If input_image or input_masks is a single PIL Image, it is converted to a list with one element.
+        - If input_prompt is a single string, it is replicated to match the number of images.
+
+    Example:
+        >>> input_image = PIL.Image.open('input_image.jpg')
+        >>> input_mask = PIL.Image.open('input_mask.jpg')
+        >>> input_prompt = "Apply artistic style to the image."
+        >>> output_image = image_inference(input_image, input_mask, input_prompt)
+    """
     assert type(input_image) is type(
         input_masks), f"Types of input don't match {type(input_image)} and {type(input_masks)}"
 
@@ -154,13 +181,6 @@ def video_inference(input_image: List[PIL.Image.Image],
     # Set the attention processor from https://arxiv.org/pdf/2303.13439.pdf
     pipe.unet.set_attn_processor(CrossFrameAttnProcessor(batch_size=2))
     pipe.controlnet.set_attn_processor(CrossFrameAttnProcessor(batch_size=2))
-
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-
-    # we need to convert to Tensor
-    transform = ToTensor()
-    input_masks = torch.cat([transform(c).unsqueeze(0) for c in input_masks]
-                            ).to(device=device, dtype=torch.float16)
 
     return pipe(prompt=[prompt] * len(input_image), image=input_image, mask=input_masks).images
 

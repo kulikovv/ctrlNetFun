@@ -2,28 +2,24 @@ FROM nvidia/cuda:11.0.3-devel-ubuntu20.04
 
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
-
+ENV NVIDIA_VISIBLE_DEVICES all
+ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
 
 # Install system dependencies
 RUN apt-get update && \
-    apt-get install -y \
+    apt-get install -y --no-install-recommends \
     git \
     python3-pip \
     python3-dev \
     python3-opencv \
-    libglib2.0-0
+    libglib2.0-0 \
+    cuda-drivers \
+    && rm -rf /var/lib/apt/lists/*
 # Install any python packages you need
 COPY requirements.txt requirements.txt
 
 RUN python3 -m pip install -r requirements.txt
 
-# Install NVIDIA Container Toolkit
-ENV NVIDIA_VISIBLE_DEVICES all
-ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    cuda-drivers \
-    && rm -rf /var/lib/apt/lists/*
 # Set the working directory
 # Set up environment variables
 ENV CUDA_HOME=/usr/local/cuda \
