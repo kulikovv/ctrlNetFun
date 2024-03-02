@@ -1,2 +1,2 @@
-from .masked_controlnet import MaskedStableDiffusionControlNetPipeline
-__all__ = ["MaskedStableDiffusionControlNetPipeline"]
+from .masked_controlnet import MaskedStableDiffusionControlNetPipeline, MaskedControlNetModel
+__all__ = ["MaskedStableDiffusionControlNetPipeline", "MaskedControlNetModel"]

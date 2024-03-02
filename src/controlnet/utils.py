@@ -2,56 +2,43 @@ import numpy as np
 import torch
 import PIL
 from torchvision.transforms import ToTensor
+from typing import Union
 
 
-def prepare_mask(
-        mask,  # Input mask (can be PIL Image, numpy array, or torch Tensor)
-        width,  # Width of the target mask
-        height,  # Height of the target mask
-        batch_size,  # Batch size for the mask
-        num_images_per_prompt,  # Number of images per prompt
-        device,  # Device to move the mask tensor
-        dtype,  # Data type of the mask tensor
-        do_classifier_free_guidance=False,  # Flag indicating whether to do classifier-free guidance
-        guess_mode=False,  # Flag indicating guess mode
-):
+def prepare_mask(mask: Union[PIL.Image.Image, np.ndarray, torch.Tensor],
+                 image: torch.Tensor) -> torch.Tensor:
     """
-    Prepare the mask tensor for the given parameters.
+    Prepares a mask tensor given a mask in the form of PIL Image,
+    NumPy array, or PyTorch tensor, and an input image tensor.
 
     Args:
-        mask: Input mask, can be a PIL Image, numpy array, or torch Tensor.
-        width: Width of the target mask.
-        height: Height of the target mask.
-        batch_size: Batch size for the mask.
-        num_images_per_prompt   : Number of images per prompt.
-        device: Device to move the mask tensor.
-        dtype: Data type of the mask tensor.
-        do_classifier_free_guidance (bool): Flag indicating whether to do classifier-free guidance.
-        guess_mode (bool): Flag indicating guess mode.
+    - mask: Input mask in the form of PIL Image, NumPy array, or PyTorch tensor.
+    - image: Input image tensor.
 
     Returns:
-        torch.Tensor: Prepared mask tensor.
+    - torch.Tensor: Prepared mask tensor suitable controlnet
 
     Raises:
-        NotImplementedError: If the datatype of the mask is not supported.
-        AssertionError: If the mask is incorrect according to specifications.
-
-    Note:
-        The function handles different types of mask inputs (PIL Image, numpy array, or torch Tensor),
-        interpolates them to match the target size, repeats them according to the batch size,
-        and performs necessary transformations based on additional flags provided.
+    - NotImplementedError: If the mask shape or datatype is not supported.
     """
-
     if isinstance(mask, PIL.Image.Image):
         # convert PIL to torch
         mask = ToTensor()(mask)
-        if 3 == len(mask.shape):
+        if 3 == len(mask.shape):  # three channels
             mask = mask.unsqueeze(0)
+        elif 2 == len(mask.shape):  # single channel
+            mask = mask.unsqueeze(0).unsqueeze(0)
+        else:
+            raise NotImplementedError(f"mask shape {mask.shape} is not support!")
     elif isinstance(mask, np.ndarray):
         mask = torch.from_numpy(mask)
         # we expect mask as input from opencv WxHxC so we will permute
         if 3 == len(mask.shape):
-            mask = mask.permute(2, 0, 1).unsqueeze(0)
+            mask = mask.permute(2, 0, 1).unsqueeze(0)  # WHC -> BCWH
+        elif 2 == len(mask.shape):  # single channel
+            mask = mask.unsqueeze(0).unsqueeze(0)
+        else:
+            raise NotImplementedError(f"mask shape {mask.shape} is not support!")
     elif isinstance(mask, torch.Tensor):
         mask = mask
         if 3 == len(mask.shape):
@@ -63,21 +50,14 @@ def prepare_mask(
     assert 4 == len(mask.shape), "Mask is incorrect, please check the documentation"
     assert 1 == mask.shape[1], "Mask should be single channel, please check the documentation"
 
-    mask = torch.nn.functional.interpolate(mask, size=(height, width), mode='bicubic')
+    mask = mask.to(device=image.device, dtype=image.dtype)
+
+    mask = torch.nn.functional.interpolate(mask, size=image.shape[-2:], mode='bicubic')
 
     image_batch_size = mask.shape[0]
-    if image_batch_size == 1:
-        repeat_by = batch_size
-    else:
-        # mask batch size is the same as prompt batch size
-        repeat_by = num_images_per_prompt
+    repeat_by = image.shape[0] // image_batch_size
 
     mask = mask.repeat_interleave(repeat_by, dim=0)
-
-    mask = mask.to(device=device, dtype=dtype)
-
-    if do_classifier_free_guidance and not guess_mode:
-        mask = torch.cat([mask] * 2)
 
     return mask
 
