@@ -34,8 +34,6 @@ def build_foreground_masks(input_image: Union[PIL.Image.Image, List[PIL.Image.Im
     for img in images:
         output += [remover.process(img, type='map')]
 
-    if 1 == len(output):
-        return output[0]
     return output
 
 
@@ -146,8 +144,6 @@ def image_inference(input_image: Union[PIL.Image.Image, List[PIL.Image.Image]],
             mask=mask
         ).images[0]]
 
-    if 1 == len(output):
-        return output[0]
     return output
 
 
@@ -203,9 +199,6 @@ def main():
 
     # load images as RGB PIL
     images = [load_image(f) for f in image_path]
-
-    if 1 == len(images):
-        images = images[0]
 
     # build foreground masks
     masks = build_foreground_masks(images)
