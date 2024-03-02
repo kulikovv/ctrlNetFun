@@ -7,7 +7,7 @@ import numpy as np
 from diffusers import UniPCMultistepScheduler
 from diffusers.utils import load_image, make_image_grid
 from diffusers.pipelines.text_to_video_synthesis.pipeline_text_to_video_zero import CrossFrameAttnProcessor
-from src.controlnet import MaskedStableDiffusionControlNetPipeline, MaskedControlNetModel
+from .controlnet import MaskedStableDiffusionControlNetPipeline, MaskedControlNetModel
 import torch
 from transparent_background import Remover
 
