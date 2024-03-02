@@ -17,9 +17,25 @@ COPY requirements.txt requirements.txt
 
 RUN python3 -m pip install -r requirements.txt
 
-
+# Install NVIDIA Container Toolkit
+ENV NVIDIA_VISIBLE_DEVICES all
+ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    cuda-drivers \
+    && rm -rf /var/lib/apt/lists/*
 # Set the working directory
+# Set up environment variables
+ENV CUDA_HOME=/usr/local/cuda \
+    LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH \
+    PATH=/usr/local/cuda/bin:$PATH
+
+# Copy the Python application files into the container
+COPY . /app
 WORKDIR /app
+
+# Command to run the Python application with CUDA
+#CMD ["python3", "-m", "src.inference", "-d"]
 
 # Set the entrypoint
 ENTRYPOINT [ "python3" ]

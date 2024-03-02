@@ -192,15 +192,17 @@ def main():
 
     # do the inference
     if not args.video:
+        rows, cols = 1, 4
         output = image_inference(canny_images, masks, args.prompt)
     else:
+        rows, cols = 4, 1
         # we have limit 2, otherwise don't fit 1080Ti GPU
         output = video_inference(canny_images[:args.limit], masks[:args.limit], args.prompt)
 
     if args.debug:
         # debug mode we store all the images
         for idx, img, mask, canny, out in zip(range(len(images)), images, masks, canny_images, output):
-            f = make_image_grid([img, mask, canny, out], rows=4, cols=1)
+            f = make_image_grid([img, mask, canny, out], rows=rows, cols=cols)
             f.save(f"{args.output}/{idx:03}.png")
     else:
         for i, f in enumerate(output):

@@ -1,4 +1,4 @@
 diffusers==0.26.3 # I've fixed diffusers version because the library is in constant development and package struct may be changed
 transparent_background # This pachage doesn't have version
-opencv-python >=4.5, <4.5.5 # Stable version of opencv
 pillow >= 8.2.0
+transformers==4.36.2
