@@ -14,7 +14,7 @@ setuptools.setup(
     author="Victor Kulikov",
     description="ControlNet package",
     url="",
-    packages=['src'],
+    packages=['src', 'src/controlnet'],
     include_package_data=False,
     python_requires=">=3.6, <4",
     zip_safe=False,
