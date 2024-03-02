@@ -1,6 +1,6 @@
 # ControlNet customization
 
-## Usage: ContolNetFun [OPTIONS]
+## Usage: src/inference.py [OPTIONS]
 
 Process images/videos using Masked ControlNet.
 
@@ -33,7 +33,7 @@ Process images/videos using Masked ControlNet.
 To process images with default settings:
 
 ```bash
-ContolNetFun -input /path/to/input/folder -output /path/to/output/folder -prompt "Custom prompt" -v -d -l 2
+python -m src.inference -input /path/to/input/folder -output /path/to/output/folder -prompt "Custom prompt" -v -d -l 2
 ```
 
 Run via docker:
