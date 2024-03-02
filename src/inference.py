@@ -194,8 +194,8 @@ def main():
     args = parser.parse_args()
 
     # scan the directory for images
-    image_path = [os.path.join(args.input, p) for p in os.listdir(
-        args.input) if p.endswith(".png") or p.endswith(".jpg")]
+    image_names = [p for p in os.listdir(args.input) if p.endswith(".png") or p.endswith(".jpg")]
+    image_path = [os.path.join(args.input, p) for p in image_names]
 
     # load images as RGB PIL
     images = [load_image(f) for f in image_path]
@@ -218,12 +218,12 @@ def main():
 
     if args.debug:
         # debug mode we store all the images
-        for idx, img, mask, canny, out in zip(range(len(images)), images, masks, canny_images, output):
+        for name, img, mask, canny, out in zip(image_names, images, masks, canny_images, output):
             f = make_image_grid([img, mask, canny, out], rows=rows, cols=cols)
-            f.save(f"{args.output}/{idx:03}.png")
+            f.save(f"{args.output}/{name}")
     else:
-        for i, f in enumerate(output):
-            f.save(f"{args.output}/{i:03}.png")
+        for name, f in zip(image_names, output):
+            f.save(f"{args.output}/{name}")
 
 
 if "__main__" == __name__:

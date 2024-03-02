@@ -2,3 +2,4 @@ diffusers==0.26.3 # I've fixed diffusers version because the library is in const
 transparent_background # This pachage doesn't have version
 pillow >= 8.2.0
 transformers==4.36.2
+accelerate
