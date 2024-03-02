@@ -46,6 +46,8 @@ def prepare_mask(mask: Union[PIL.Image.Image, np.ndarray, torch.Tensor],
     else:
         raise NotImplementedError(f"mask datatype {type(mask)} is not support!")
 
+    mask = mask[:, 0:1]  # make sure that we will have 1 chanell per mask
+
     # Ensure the mask has the correct shape and channel dimensions
     assert 4 == len(mask.shape), "Mask is incorrect, please check the documentation"
     assert 1 == mask.shape[1], "Mask should be single channel, please check the documentation"

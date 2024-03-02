@@ -38,7 +38,13 @@ class MaskedStableDiffusionControlNetPipeline(StableDiffusionControlNetPipeline)
     will use MaskedControlNetModel to set manually the mask, what can lead to undesired behaviour and bugs
     """
 
+    # this is an additional flag for prepare_latents function, that should be triggered on to achive latent consistancy
+    video_mode = False
+
     def __call__(self, *args: Any, **kwds: Any) -> Any:
+        """
+        Override of call method, to set the mask if it is provided
+        """
         mask = kwds.pop("mask", None)  # get the mask from kwargs
         if isinstance(self.controlnet, MaskedControlNetModel):
             self.controlnet.set_mask(mask)  # set the mask
@@ -47,3 +53,16 @@ class MaskedStableDiffusionControlNetPipeline(StableDiffusionControlNetPipeline)
                 f"To get masked bevaviour, please use MaskedControlNetModel class, got {type(self.controlnet)}")
         # run standard StableDiffusionControlNetPipeline
         return super().__call__(*args, **kwds)
+
+    def prepare_latents(self, batch_size, num_channels_latents, height, width, dtype, device, generator, latents=None):
+        """
+        Override of prepare_latents for video mode generation
+        """
+        latents = super().prepare_latents(batch_size, num_channels_latents,
+                                          height, width, dtype, device, generator, latents)
+        if self.video_mode:
+            # repeat the same latent for the batch in video mode
+            latents = torch.randn((1, 4, latents.shape[2], latents.shape[3]),
+                                  device=latents.device,
+                                  dtype=latents.dtype).repeat(len(latents), 1, 1, 1)
+        return latents
