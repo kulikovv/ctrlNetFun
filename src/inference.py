@@ -204,6 +204,9 @@ def main():
     # load images as RGB PIL
     images = [load_image(f) for f in image_path]
 
+    if 1 == len(images):
+        images = images[0]
+
     # build foreground masks
     masks = build_foreground_masks(images)
 
@@ -215,6 +218,7 @@ def main():
         rows, cols = 1, 4
         output = image_inference(canny_images, masks, args.prompt)
     else:
+        assert len(canny_images) > 1, "For video mode we need at least 2 frames"
         rows, cols = 4, 1
         # we have limit 2, otherwise don't fit 1080Ti GPU
         output = video_inference(canny_images[:args.limit], masks[:args.limit], args.prompt)
